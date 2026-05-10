@@ -37,3 +37,4 @@ To execute tasks for this project, heavily reference the custom guides located i
 1. When asked to implement a feature, always consult the **Prompt Contract** (`Prompt_Contract.md`) to ensure you do not violate constraints.
 2. Before modifying the agent loop, refer to `skills/custom-agent-loop.md`.
 3. Always ask clarifying questions (Reverse Prompting) if a user requests a feature that might bypass the human-in-the-loop requirement.
+4. Always commit your changes with standardized commit messages and push them to GitHub regularly.
