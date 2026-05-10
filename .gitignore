@@ -1,0 +1,11 @@
+# Agent specific context and instructions
+GEMINI.md
+Prompt_Contract.md
+Skills/
+
+# standard python ignores
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
