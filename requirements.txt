@@ -3,3 +3,6 @@ uvicorn
 sqlalchemy
 google-genai
 python-dotenv
+authlib
+itsdangerous
+httpx

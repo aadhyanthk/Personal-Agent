@@ -1,6 +1,14 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Boolean
 from sqlalchemy.sql import func
 from .database import Base
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    google_access_token = Column(String)
+    google_refresh_token = Column(String)
+    token_expires_at = Column(Integer) # Unix timestamp
 
 class Email(Base):
     __tablename__ = "emails"
