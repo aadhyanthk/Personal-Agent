@@ -14,6 +14,9 @@ class EmailPayload(BaseModel):
     subject: str
     body: str
 
+class ResolveActionPayload(BaseModel):
+    status: str # COMPLETED or REJECTED
+
 @router.post("/process-email")
 def process_email(payload: EmailPayload, db: Session = Depends(get_db)):
     # 1. Use LLM to classify and draft reply
@@ -60,3 +63,29 @@ def process_email(payload: EmailPayload, db: Session = Depends(get_db)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/pending-actions")
+def get_pending_actions(db: Session = Depends(get_db)):
+    actions = db.query(Action).filter(Action.status == "PENDING_APPROVAL").all()
+    result = []
+    for action in actions:
+        result.append({
+            "id": action.id,
+            "action_type": action.action_type,
+            "payload": json.loads(action.payload),
+            "created_at": action.created_at
+        })
+    return result
+
+@router.post("/actions/{action_id}/resolve")
+def resolve_action(action_id: int, payload: ResolveActionPayload, db: Session = Depends(get_db)):
+    if payload.status not in ["COMPLETED", "REJECTED"]:
+        raise HTTPException(status_code=400, detail="Invalid status. Must be COMPLETED or REJECTED")
+        
+    action = db.query(Action).filter(Action.id == action_id).first()
+    if not action:
+        raise HTTPException(status_code=404, detail="Action not found")
+        
+    action.status = payload.status
+    db.commit()
+    return {"message": f"Action {action_id} marked as {payload.status}"}
