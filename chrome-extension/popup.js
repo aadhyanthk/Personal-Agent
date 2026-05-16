@@ -102,9 +102,12 @@ async function loadPendingActions() {
         div.style.marginBottom = "10px";
         div.style.backgroundColor = action.payload.classification === "URGENT" ? "#fff0f0" : "#f0f7ff";
         
+        const targetEmailStr = action.payload.target_email && action.payload.target_email !== action.payload.sender ? 
+            ` (Sending to: ${action.payload.target_email})` : '';
+        
         div.innerHTML = `
           <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">
-            <strong>${action.payload.classification}</strong> from ${action.payload.sender}
+            <strong>${action.payload.classification}</strong> from ${action.payload.sender}${targetEmailStr}
           </div>
           <strong>Draft Reply:</strong>
           <p style="margin: 5px 0; white-space: pre-wrap;"><em>${action.payload.draft}</em></p>
@@ -178,7 +181,7 @@ document.getElementById('pendingActions').addEventListener('click', (e) => {
     const actionId = parseInt(e.target.getAttribute('data-id'));
     const action = currentActions.find(a => a.id === actionId);
     if (action) {
-      approveAction(actionId, action.payload.email_id, action.payload.sender, action.payload.subject, action.payload.draft);
+      approveAction(actionId, action.payload.email_id, action.payload.target_email || action.payload.sender, action.payload.subject, action.payload.draft);
     }
   } else if (e.target.classList.contains('reject-btn')) {
     const actionId = e.target.getAttribute('data-id');

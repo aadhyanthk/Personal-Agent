@@ -30,9 +30,11 @@ def process_email(payload: EmailPayload, db: Session = Depends(get_db), x_gemini
     Body: {payload.body}
     
     1. Classify as URGENT, ACTIONABLE, or IGNORE.
-    2. If not IGNORE, draft a polite and concise reply.
+    2. Read carefully for instructions. If the email asks you to send something to a specific email address, the draft should be directed to THAT address with the requested content, not the original sender.
+    3. If not IGNORE, draft a polite and concise email/reply fulfilling the instructions.
     
-    Respond strictly in valid JSON format: {{"classification": "...", "draft": "..."}}
+    Respond strictly in valid JSON format: {{"classification": "...", "draft": "...", "target_email": "..."}}
+    (Set "target_email" to the explicitly requested email address if the email asks you to send something somewhere else. Otherwise, set it to the original sender).
     """
     
     try:
@@ -55,12 +57,15 @@ def process_email(payload: EmailPayload, db: Session = Depends(get_db), x_gemini
 
         classification = result.get("classification", "IGNORE").upper()
         
+        target_email = result.get("target_email", payload.sender)
+        
         # 2. Only create an action if it's URGENT or ACTIONABLE
         action_id = None
         if classification in ["URGENT", "ACTIONABLE"]:
             action_payload = {
                 "email_id": payload.message_id,
                 "sender": payload.sender,
+                "target_email": target_email,
                 "subject": payload.subject,
                 "draft": result.get("draft"),
                 "classification": classification
