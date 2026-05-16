@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Personal Operations Agent",
+  "version": "1.0",
+  "description": "Human-in-the-loop agent that manages your Gmail and Calendar.",
+  "permissions": [
+    "identity",
+    "storage",
+    "background"
+  ],
+  "oauth2": {
+    "client_id": "YOUR_CLIENT_ID_HERE.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/gmail.modify",
+      "https://www.googleapis.com/auth/calendar"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

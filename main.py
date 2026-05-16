@@ -1,10 +1,9 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from starlette.middleware.sessions import SessionMiddleware
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import os
 from db.database import engine, Base
 import db.models
-from routers import auth
+from routers import brain
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,27 +11,19 @@ load_dotenv()
 # Initialize DB tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Personal Operations Agent")
+app = FastAPI(title="Personal Operations Agent (Brain)")
 
-# Crucial for Authlib OAuth state handling
+# Allow requests from the Chrome Extension
 app.add_middleware(
-    SessionMiddleware, 
-    secret_key=os.environ.get("SESSION_SECRET_KEY", "fallback_secret_please_change")
+    CORSMiddleware,
+    allow_origins=["*"], # Allow any origin for development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-app.include_router(auth.router)
+app.include_router(brain.router)
 
-@app.get("/", response_class=HTMLResponse)
-def read_root(request: Request):
-    user = request.session.get('user')
-    if user:
-        return f"<h1>Welcome to the Personal Operations Agent, {user['email']}!</h1><a href='/dashboard'>Go to Dashboard</a> | <a href='/auth/logout'>Logout</a>"
-    return "<h1>Personal Operations Agent</h1><a href='/auth/login'>Login with Google</a>"
-
-@app.get("/dashboard")
-def dashboard(request: Request):
-    user = request.session.get('user')
-    if not user:
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url='/')
-    return {"message": "Welcome to your dashboard!", "user": user}
+@app.get("/")
+def read_root():
+    return {"message": "Personal Operations Agent Brain API is running."}
