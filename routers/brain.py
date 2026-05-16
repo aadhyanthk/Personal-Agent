@@ -43,24 +43,31 @@ def process_email(payload: EmailPayload, db: Session = Depends(get_db), x_gemini
             llm_response = llm_response.replace("```json", "").replace("```", "").strip()
             
         result = json.loads(llm_response)
+        classification = result.get("classification", "IGNORE").upper()
         
-        # 2. Save proposed action to DB
-        action_payload = {
-            "email_id": payload.message_id,
-            "draft": result.get("draft")
-        }
-        action = Action(
-            action_type="DRAFT_REPLY",
-            status="PENDING_APPROVAL",
-            payload=json.dumps(action_payload)
-        )
-        db.add(action)
-        db.commit()
-        db.refresh(action)
+        # 2. Only create an action if it's URGENT or ACTIONABLE
+        action_id = None
+        if classification in ["URGENT", "ACTIONABLE"]:
+            action_payload = {
+                "email_id": payload.message_id,
+                "sender": payload.sender,
+                "subject": payload.subject,
+                "draft": result.get("draft"),
+                "classification": classification
+            }
+            action = Action(
+                action_type="DRAFT_REPLY",
+                status="PENDING_APPROVAL",
+                payload=json.dumps(action_payload)
+            )
+            db.add(action)
+            db.commit()
+            db.refresh(action)
+            action_id = action.id
         
         return {
-            "action_id": action.id,
-            "classification": result.get("classification"),
+            "action_id": action_id,
+            "classification": classification,
             "draft": result.get("draft")
         }
         

@@ -98,12 +98,18 @@ async function loadPendingActions() {
         div.style.border = "1px solid #ccc";
         div.style.padding = "10px";
         div.style.marginBottom = "10px";
+        div.style.backgroundColor = action.payload.classification === "URGENT" ? "#fff0f0" : "#f0f7ff";
         
         div.innerHTML = `
-          <strong>Draft Reply to Email ID:</strong> ${action.payload.email_id}<br>
-          <p><em>${action.payload.draft}</em></p>
-          <button onclick="approveAction(${action.id}, '${action.payload.email_id}', \`${action.payload.draft.replace(/`/g, "'")}\`)">Approve & Send</button>
-          <button onclick="rejectAction(${action.id})">Reject</button>
+          <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">
+            <strong>${action.payload.classification}</strong> from ${action.payload.sender}
+          </div>
+          <strong>Draft Reply:</strong>
+          <p style="margin: 5px 0;"><em>${action.payload.draft}</em></p>
+          <div style="margin-top: 10px;">
+            <button onclick="approveAction(${action.id}, '${action.payload.email_id}', \`${action.payload.draft.replace(/`/g, "'")}\`)">Approve & Send</button>
+            <button onclick="rejectAction(${action.id})">Reject</button>
+          </div>
         `;
         container.appendChild(div);
       }
