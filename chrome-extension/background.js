@@ -9,7 +9,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     (async () => {
       try {
         // 1. Fetch unread messages
-        let response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread', {
+        const timeframe = request.timeframe || "1d";
+        const query = encodeURIComponent(`is:unread newer_than:${timeframe}`);
+        let response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         let data = await response.json();

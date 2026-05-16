@@ -58,6 +58,7 @@ document.getElementById('loginBtn').addEventListener('click', () => {
 
 document.getElementById('checkEmailBtn').addEventListener('click', () => {
   document.getElementById('status').innerText = "Checking emails...";
+  const timeframe = document.getElementById('timeframeSelect').value;
   
   // Get the token and pass it to the background script
   chrome.identity.getAuthToken({ interactive: false }, function(token) {
@@ -69,7 +70,8 @@ document.getElementById('checkEmailBtn').addEventListener('click', () => {
     chrome.runtime.sendMessage({ 
       action: "check_emails", 
       apiKey: currentApiKey,
-      token: token 
+      token: token,
+      timeframe: timeframe
     }, response => {
       document.getElementById('status').innerText = response ? response.status : "Error";
       setTimeout(loadPendingActions, 2000); 

@@ -19,8 +19,14 @@
 
   <button id="loginBtn">Login with Google</button>
   <div id="dashboardSection" style="display:none;">
-    <button id="checkEmailBtn">Check Emails</button>
-    <div id="status">Not logged in.</div>
+    <label for="timeframeSelect"><small>Fetch unread from:</small></label>
+    <select id="timeframeSelect" style="margin-bottom: 5px; width: 100%;">
+        <option value="1h">Last Hour</option>
+        <option value="1d" selected>Last Day</option>
+        <option value="7d">Last Week</option>
+    </select>
+    <button id="checkEmailBtn" style="width: 100%;">Check Emails</button>
+    <div id="status" style="margin-top: 5px;">Not logged in.</div>
     <hr>
     <h3>Pending Actions</h3>
     <div id="pendingActions"></div>
