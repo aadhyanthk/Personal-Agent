@@ -107,8 +107,8 @@ async function loadPendingActions() {
           <strong>Draft Reply:</strong>
           <p style="margin: 5px 0;"><em>${action.payload.draft}</em></p>
           <div style="margin-top: 10px;">
-            <button onclick="approveAction(${action.id}, '${action.payload.email_id}', \`${action.payload.draft.replace(/`/g, "'")}\`)">Approve & Send</button>
-            <button onclick="rejectAction(${action.id})">Reject</button>
+            <button class="approve-btn" data-id="${action.id}" data-email="${action.payload.email_id}" data-draft="${action.payload.draft.replace(/"/g, '&quot;')}">Approve & Send</button>
+            <button class="reject-btn" data-id="${action.id}">Reject</button>
           </div>
         `;
         container.appendChild(div);
@@ -150,3 +150,26 @@ window.rejectAction = async function(actionId) {
   });
   loadPendingActions();
 };
+
+// Event Delegation for dynamically created buttons (Fixes CSP issue)
+document.getElementById('pendingActions').addEventListener('click', (e) => {
+  if (e.target.classList.contains('approve-btn')) {
+    const actionId = e.target.getAttribute('data-id');
+    const emailId = e.target.getAttribute('data-email');
+    const draft = e.target.getAttribute('data-draft');
+    approveAction(actionId, emailId, draft);
+  } else if (e.target.classList.contains('reject-btn')) {
+    const actionId = e.target.getAttribute('data-id');
+    rejectAction(actionId);
+  }
+});
+
+// Check if already logged in on load
+chrome.identity.getAuthToken({ interactive: false }, function(token) {
+  if (token) {
+    document.getElementById('status').innerText = "Logged in successfully!";
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('dashboardSection').style.display = 'block';
+    loadPendingActions();
+  }
+});
