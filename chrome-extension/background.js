@@ -52,7 +52,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               'X-Gemini-Api-Key': request.apiKey
             },
             body: JSON.stringify({
-              message_id: msg.id,
+              message_id: msg.threadId, // Use threadId here to prevent 404s when replying
               sender: senderHeader,
               subject: subject,
               body: body.substring(0, 500)
