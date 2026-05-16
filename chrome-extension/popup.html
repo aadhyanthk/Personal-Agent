@@ -10,13 +10,21 @@
 </head>
 <body>
   <h2>Agent Dashboard</h2>
+  <div id="apiKeySection" style="display:none; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background-color: #f9f9f9;">
+    <label><strong>Gemini API Key:</strong></label><br>
+    <small><a href="https://aistudio.google.com/app/apikey" target="_blank">Click here to generate a free key</a></small>
+    <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="width: 100%; margin-top: 5px; margin-bottom: 5px; box-sizing: border-box;" />
+    <button id="saveKeyBtn">Save Key</button>
+  </div>
+
   <button id="loginBtn">Login with Google</button>
-  <button id="checkEmailBtn" style="display:none;">Check Emails</button>
-  <div id="status">Not logged in.</div>
-  
-  <hr>
-  <h3>Pending Actions</h3>
-  <div id="pendingActions"></div>
+  <div id="dashboardSection" style="display:none;">
+    <button id="checkEmailBtn">Check Emails</button>
+    <div id="status">Not logged in.</div>
+    <hr>
+    <h3>Pending Actions</h3>
+    <div id="pendingActions"></div>
+  </div>
   
   <script src="popup.js"></script>
 </body>

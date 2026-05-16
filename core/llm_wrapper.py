@@ -11,10 +11,10 @@ load_dotenv()
 COST_PER_1K_PROMPT = 0.000075
 COST_PER_1K_COMPLETION = 0.0003
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
-
-def generate_content_with_logging(prompt: str, model_name: str = "gemini-1.5-flash") -> str:
+def generate_content_with_logging(prompt: str, api_key: str, model_name: str = "gemini-1.5-flash") -> str:
     start_time = time.time()
+    
+    client = genai.Client(api_key=api_key)
     
     response = client.models.generate_content(
         model=model_name,

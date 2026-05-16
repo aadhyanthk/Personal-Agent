@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from db.database import get_db
@@ -18,7 +18,10 @@ class ResolveActionPayload(BaseModel):
     status: str # COMPLETED or REJECTED
 
 @router.post("/process-email")
-def process_email(payload: EmailPayload, db: Session = Depends(get_db)):
+def process_email(payload: EmailPayload, db: Session = Depends(get_db), x_gemini_api_key: str = Header(None)):
+    if not x_gemini_api_key:
+        raise HTTPException(status_code=400, detail="Missing X-Gemini-Api-Key header. Please provide your Gemini API Key in the Extension settings.")
+
     # 1. Use LLM to classify and draft reply
     prompt = f"""
     Analyze the following email:
@@ -34,7 +37,7 @@ def process_email(payload: EmailPayload, db: Session = Depends(get_db)):
     
     try:
         # LLM Logging Wrapper is used here
-        llm_response = generate_content_with_logging(prompt)
+        llm_response = generate_content_with_logging(prompt, api_key=x_gemini_api_key)
         # Clean JSON if wrapped in markdown
         if llm_response.startswith("```json"):
             llm_response = llm_response.replace("```json", "").replace("```", "").strip()

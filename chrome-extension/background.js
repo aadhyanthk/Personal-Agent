@@ -44,7 +44,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           // 3. Send to FastAPI Brain
           await fetch('http://localhost:8000/api/brain/process-email', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-Gemini-Api-Key': request.apiKey
+            },
             body: JSON.stringify({
               message_id: msg.id,
               sender: senderHeader,
