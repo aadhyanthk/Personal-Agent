@@ -36,6 +36,7 @@ function checkAuthStatus() {
     if (token) {
       document.getElementById('loginBtn').style.display = 'none';
       document.getElementById('dashboardSection').style.display = 'block';
+      document.getElementById('status').innerText = "Logged in successfully!";
       loadPendingActions();
     } else {
       document.getElementById('loginBtn').style.display = 'block';
@@ -106,7 +107,7 @@ async function loadPendingActions() {
       }
     });
   } catch (e) {
-    container.innerHTML = "Error loading actions.";
+    container.innerHTML = "Error connecting to Backend Brain. Is FastAPI running on localhost:8000?";
   }
 }
 

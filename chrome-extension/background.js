@@ -60,7 +60,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         
         sendResponse({ status: `Processed ${data.messages.length} emails.` });
       } catch (error) {
-        sendResponse({ status: "Error fetching emails: " + error.message });
+        sendResponse({ status: "Error: " + error.message + " (Is backend running?)" });
       }
     })();
     return true; 
