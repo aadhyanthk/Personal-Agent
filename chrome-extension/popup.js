@@ -79,20 +79,22 @@ document.getElementById('checkEmailBtn').addEventListener('click', () => {
   });
 });
 
+let currentActions = [];
+
 async function loadPendingActions() {
   const container = document.getElementById('pendingActions');
   container.innerHTML = "Loading...";
   try {
     const res = await fetch('http://localhost:8000/api/brain/pending-actions');
-    const actions = await res.json();
+    currentActions = await res.json();
     
-    if (actions.length === 0) {
+    if (currentActions.length === 0) {
       container.innerHTML = "No pending actions.";
       return;
     }
     
     container.innerHTML = "";
-    actions.forEach(action => {
+    currentActions.forEach(action => {
       if (action.action_type === "DRAFT_REPLY") {
         const div = document.createElement('div');
         div.style.border = "1px solid #ccc";
@@ -105,9 +107,9 @@ async function loadPendingActions() {
             <strong>${action.payload.classification}</strong> from ${action.payload.sender}
           </div>
           <strong>Draft Reply:</strong>
-          <p style="margin: 5px 0;"><em>${action.payload.draft}</em></p>
+          <p style="margin: 5px 0; white-space: pre-wrap;"><em>${action.payload.draft}</em></p>
           <div style="margin-top: 10px;">
-            <button class="approve-btn" data-id="${action.id}" data-email="${action.payload.email_id}" data-draft="${action.payload.draft.replace(/"/g, '&quot;')}">Approve & Send</button>
+            <button class="approve-btn" data-id="${action.id}">Approve & Send</button>
             <button class="reject-btn" data-id="${action.id}">Reject</button>
           </div>
         `;
@@ -119,11 +121,27 @@ async function loadPendingActions() {
   }
 }
 
-window.approveAction = function(actionId, emailId, draft) {
+window.approveAction = function(actionId, emailId, sender, subject, draft) {
   chrome.identity.getAuthToken({ interactive: false }, async function(token) {
     if (!token) return alert("Not authenticated!");
-    const emailStr = `To: placeholder@example.com\r\nSubject: Re: Your Email\r\n\r\n${draft}`;
-    const encodedEmail = btoa(emailStr).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    
+    // Extract exact email if formatted as "Name <email@domain.com>"
+    let toEmail = sender;
+    const emailMatch = sender.match(/<([^>]+)>/);
+    if (emailMatch) {
+        toEmail = emailMatch[1];
+    }
+    
+    // Gmail requires Subject to match exactly (with Re:) for threads
+    let replySubject = subject;
+    if (!replySubject.toLowerCase().startsWith('re:')) {
+        replySubject = 'Re: ' + replySubject;
+    }
+    
+    const emailStr = `To: ${toEmail}\r\nSubject: ${replySubject}\r\n\r\n${draft}`;
+    // Safe base64 encoding for UTF-8 strings
+    const encodedEmail = btoa(unescape(encodeURIComponent(emailStr))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    
     try {
       const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
         method: 'POST',
@@ -137,7 +155,10 @@ window.approveAction = function(actionId, emailId, draft) {
            body: JSON.stringify({ status: "COMPLETED" })
          });
          loadPendingActions();
-      } else { alert("Failed to send email"); }
+      } else { 
+        const errorText = await res.text();
+        alert("Failed to send email:\n" + errorText); 
+      }
     } catch (e) { alert("Error: " + e); }
   });
 };
@@ -151,13 +172,14 @@ window.rejectAction = async function(actionId) {
   loadPendingActions();
 };
 
-// Event Delegation for dynamically created buttons (Fixes CSP issue)
+// Event Delegation for dynamically created buttons
 document.getElementById('pendingActions').addEventListener('click', (e) => {
   if (e.target.classList.contains('approve-btn')) {
-    const actionId = e.target.getAttribute('data-id');
-    const emailId = e.target.getAttribute('data-email');
-    const draft = e.target.getAttribute('data-draft');
-    approveAction(actionId, emailId, draft);
+    const actionId = parseInt(e.target.getAttribute('data-id'));
+    const action = currentActions.find(a => a.id === actionId);
+    if (action) {
+      approveAction(actionId, action.payload.email_id, action.payload.sender, action.payload.subject, action.payload.draft);
+    }
   } else if (e.target.classList.contains('reject-btn')) {
     const actionId = e.target.getAttribute('data-id');
     rejectAction(actionId);
