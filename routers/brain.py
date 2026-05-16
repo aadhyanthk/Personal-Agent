@@ -38,11 +38,21 @@ def process_email(payload: EmailPayload, db: Session = Depends(get_db), x_gemini
     try:
         # LLM Logging Wrapper is used here
         llm_response = generate_content_with_logging(prompt, api_key=x_gemini_api_key)
-        # Clean JSON if wrapped in markdown
-        if llm_response.startswith("```json"):
-            llm_response = llm_response.replace("```json", "").replace("```", "").strip()
+        
+        # Robust JSON cleaning
+        llm_response = llm_response.strip()
+        if "```json" in llm_response:
+            llm_response = llm_response.split("```json")[1].split("```")[0].strip()
+        elif "```" in llm_response:
+            llm_response = llm_response.split("```")[1].split("```")[0].strip()
             
-        result = json.loads(llm_response)
+        try:
+            result = json.loads(llm_response)
+        except json.JSONDecodeError as e:
+            # Fallback if JSON is still messy
+            print(f"JSON Decode Error: {e}. Raw response: {llm_response}")
+            raise HTTPException(status_code=500, detail=f"LLM returned invalid JSON: {str(e)}")
+
         classification = result.get("classification", "IGNORE").upper()
         
         # 2. Only create an action if it's URGENT or ACTIONABLE
@@ -71,8 +81,11 @@ def process_email(payload: EmailPayload, db: Session = Depends(get_db), x_gemini
             "draft": result.get("draft")
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Unhandled Error in process_email: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @router.get("/pending-actions")
 def get_pending_actions(db: Session = Depends(get_db)):
