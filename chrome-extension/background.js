@@ -1,11 +1,12 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "check_emails") {
-    chrome.identity.getAuthToken({ interactive: false }, async function(token) {
-      if (!token) {
-        sendResponse({ status: "Error: Not authenticated." });
-        return;
-      }
-      
+    const token = request.token;
+    if (!token) {
+      sendResponse({ status: "Error: Not authenticated." });
+      return;
+    }
+
+    (async () => {
       try {
         // 1. Fetch unread messages
         let response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread', {
@@ -30,7 +31,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           let subject = headers.find(h => h.name.toLowerCase() === 'subject')?.value || "No Subject";
           let senderHeader = headers.find(h => h.name.toLowerCase() === 'from')?.value || "Unknown Sender";
           
-          // Very basic body extraction (handles simple text/plain)
+          // Very basic body extraction
           let body = "";
           if (detailData.payload.parts && detailData.payload.parts.length > 0) {
             let part = detailData.payload.parts.find(p => p.mimeType === 'text/plain');
@@ -52,7 +53,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               message_id: msg.id,
               sender: senderHeader,
               subject: subject,
-              body: body.substring(0, 500) // Truncate to save tokens for now
+              body: body.substring(0, 500)
             })
           });
         }
@@ -61,7 +62,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       } catch (error) {
         sendResponse({ status: "Error fetching emails: " + error.message });
       }
-    });
-    return true; // Keep message channel open for async response
+    })();
+    return true; 
   }
 });

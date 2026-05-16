@@ -57,9 +57,22 @@ document.getElementById('loginBtn').addEventListener('click', () => {
 
 document.getElementById('checkEmailBtn').addEventListener('click', () => {
   document.getElementById('status').innerText = "Checking emails...";
-  chrome.runtime.sendMessage({ action: "check_emails", apiKey: currentApiKey }, response => {
-    document.getElementById('status').innerText = response ? response.status : "Error";
-    setTimeout(loadPendingActions, 2000); // Reload actions after processing
+  
+  // Get the token and pass it to the background script
+  chrome.identity.getAuthToken({ interactive: false }, function(token) {
+    if (!token) {
+      document.getElementById('status').innerText = "Error: Not authenticated. Please login again.";
+      return;
+    }
+    
+    chrome.runtime.sendMessage({ 
+      action: "check_emails", 
+      apiKey: currentApiKey,
+      token: token 
+    }, response => {
+      document.getElementById('status').innerText = response ? response.status : "Error";
+      setTimeout(loadPendingActions, 2000); 
+    });
   });
 });
 
